@@ -1,0 +1,7 @@
+src/
+tsconfig.json
+sample-html/
+.claude/
+.github/
+*.tsbuildinfo
+.DS_Store

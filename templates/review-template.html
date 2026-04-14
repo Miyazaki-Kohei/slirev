@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide Feedback - __DECK_NAME__</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+    background: #f5f5f5; color: #333; overflow: hidden; height: 100vh;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; height: 48px; background: #1B4565; color: #fff; flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-title { font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .deck-badge {
+    background: #3E9BA4; color: #fff; padding: 4px 14px; border-radius: 4px; font-size: 13px;
+  }
+  .header-center { display: flex; align-items: center; gap: 8px; }
+  .nav-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.15); }
+  .slide-num { font-size: 14px; min-width: 60px; text-align: center; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .header-action {
+    background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap;
+  }
+  .header-action:hover { background: rgba(255,255,255,0.15); }
+  .header-action.active { background: #3E9BA4; border-color: #3E9BA4; }
+
+  /* ===== Main layout ===== */
+  .main { display: flex; height: calc(100vh - 48px); }
+
+  /* ===== Slide preview ===== */
+  .preview-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #e8e8e8; padding: 24px; min-width: 0;
+  }
+  .preview-wrapper {
+    width: 100%; max-width: 1200px; aspect-ratio: 16/9;
+    background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+    border-radius: 4px; overflow: hidden;
+  }
+  .preview-wrapper img { width: 100%; height: 100%; object-fit: contain; border: none; background: #1a1a1a; }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    width: 360px; flex-shrink: 0; background: #fff; border-left: 1px solid #ddd;
+    display: flex; flex-direction: column; transition: margin-right 0.2s;
+  }
+  .sidebar.hidden { margin-right: -360px; }
+
+  .sidebar-header { padding: 16px 16px 12px; border-bottom: 1px solid #eee; }
+  .sidebar-title { font-size: 15px; font-weight: 700; color: #c0392b; margin-bottom: 6px; }
+  .slide-info { font-size: 12px; color: #888; }
+
+  .comment-input-area { padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+  .comment-input-area label { font-size: 12px; color: #888; display: block; margin-bottom: 6px; }
+  .comment-input-area textarea {
+    width: 100%; height: 72px; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; font-family: inherit; resize: none;
+  }
+  .comment-input-area textarea:focus { outline: none; border-color: #3E9BA4; }
+
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .action-btn {
+    background: #fff; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px;
+    cursor: pointer; font-size: 12px; color: #555;
+  }
+  .action-btn:hover { background: #f0f0f0; border-color: #bbb; }
+
+  .add-btn {
+    display: block; width: 100%; margin-top: 12px;
+    background: #3E9BA4; color: #fff; border: none; padding: 10px;
+    border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .add-btn:hover { background: #358a92; }
+
+  /* Comment list */
+  .comment-list-area { flex: 1; overflow-y: auto; padding: 0 16px 12px; min-height: 0; }
+  .comment-list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0 8px; position: sticky; top: 0; background: #fff;
+  }
+  .comment-list-header span { font-size: 13px; font-weight: 600; color: #666; }
+  .comment-count {
+    background: #3E9BA4; color: #fff; font-size: 11px; font-weight: 700;
+    min-width: 20px; height: 20px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+  .comment-item {
+    border: 1px solid #d0e8eb; border-left: 3px solid #3E9BA4; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+  }
+  .comment-item:hover { background: #f8fcfc; }
+  .comment-item.active { background: #eef7f8; }
+  .comment-item-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .comment-slide-label { font-size: 12px; font-weight: 700; color: #1B4565; }
+  .comment-slide-title { font-size: 11px; color: #999; margin-left: 8px; }
+  .comment-delete {
+    background: none; border: none; color: #bbb; cursor: pointer;
+    font-size: 14px; padding: 0 2px; line-height: 1;
+  }
+  .comment-delete:hover { color: #e74c3c; }
+  .comment-text { font-size: 12px; color: #555; line-height: 1.5; white-space: pre-wrap; }
+
+  /* Footer */
+  .footer {
+    display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    padding: 8px 16px; border-top: 1px solid #ddd; background: #fafafa; flex-shrink: 0;
+  }
+  .footer-btn {
+    background: #fff; border: 1px solid #ddd; padding: 6px 14px;
+    border-radius: 4px; cursor: pointer; font-size: 12px; color: #555;
+  }
+  .footer-btn:hover { background: #f0f0f0; }
+  .footer-btn.danger { color: #e74c3c; border-color: #f5c6cb; }
+  .footer-btn.danger:hover { background: #fdecea; }
+
+  /* ===== Layout modal ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 90%; max-width: 900px;
+    max-height: 85vh; overflow-y: auto; padding: 24px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header h2 { font-size: 17px; color: #1B4565; }
+  .modal-close {
+    background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1;
+  }
+  .modal-close:hover { color: #333; }
+  .modal-category { font-size: 13px; font-weight: 600; color: #888; margin: 20px 0 10px; }
+  .modal-category:first-of-type { margin-top: 0; }
+  .pattern-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pattern-card {
+    border: 1px solid #ddd; border-radius: 8px; overflow: hidden; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pattern-card:hover { border-color: #3E9BA4; box-shadow: 0 2px 8px rgba(62,155,164,0.2); }
+  .pattern-card img {
+    width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;
+    background: #f0f0f0;
+  }
+  .pattern-card-label {
+    padding: 6px 10px; font-size: 12px; color: #444; background: #fafafa;
+    border-top: 1px solid #eee;
+  }
+  .pattern-card-label .pattern-num { color: #999; margin-right: 4px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1B4565; color: #fff; padding: 10px 24px; border-radius: 8px;
+    font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="header-title">Slide Feedback</span>
+    <span class="deck-badge">__DECK_NAME__</span>
+  </div>
+  <div class="header-center">
+    <button class="nav-btn" id="btnPrev" onclick="prevSlide()">&larr;</button>
+    <span class="slide-num" id="slideCounter">- / -</span>
+    <button class="nav-btn" id="btnNext" onclick="nextSlide()">&rarr;</button>
+  </div>
+  <div class="header-right">
+    <button class="header-action" id="btnNewTab" onclick="openInNewTab()">新しいタブで開く</button>
+    <button class="header-action" id="btnFullscreen" onclick="toggleFullscreen()">フルスクリーン</button>
+    <button class="header-action active" id="btnToggleSidebar" onclick="toggleSidebar()">コメント</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="preview-area">
+    <div class="preview-wrapper" id="previewWrapper">
+      <img id="slideImage" src="" alt="Slide">
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">修正指示</div>
+      <div class="slide-info" id="slideInfo">スライド -</div>
+    </div>
+
+    <div class="comment-input-area">
+      <label>このスライドのコメント</label>
+      <textarea id="commentBox" placeholder="新しいコメントを追加..."></textarea>
+      <div class="quick-actions">
+        <button class="action-btn" data-action="/slide-style-MIYAKOH をつかってスタイルを整えて">スタイル整形</button>
+        <button class="action-btn" data-action="/layout-fix をつかってレイアウト崩れを修正して">レイアウト修正</button>
+        <button class="action-btn" id="btnLayoutModal">レイアウト例指定</button>
+        <button class="action-btn" data-action="/image-creator をつかって説明イラストを作成して挿入して">説明イラスト作成</button>
+        <button class="action-btn" data-action="/image-creator をつかって背景画像を作成して挿入して">背景画像作成</button>
+        <button class="action-btn" data-action="/svg-creator をつかって図解を作成して挿入して">図解作成</button>
+      </div>
+      <button class="add-btn" id="btnAdd" onclick="addComment()">追加</button>
+    </div>
+
+    <div class="comment-list-area">
+      <div class="comment-list-header">
+        <span>コメント一覧</span>
+        <div class="comment-count" id="commentCount">0</div>
+      </div>
+      <div id="commentList"></div>
+    </div>
+
+    <div class="footer">
+      <button class="footer-btn" id="btnCopyJSON" onclick="copyJSON()">JSON コピー</button>
+      <button class="footer-btn danger" id="btnDeleteAll" onclick="deleteAll()">全削除</button>
+      <button class="footer-btn" onclick="toggleSidebar()">&times; 閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="layoutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>レイアウトパターンを選択</h2>
+      <button class="modal-close" onclick="closeLayoutModal()">&times;</button>
+    </div>
+    <div id="patternList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var DECK_NAME = '__DECK_NAME__';
+var DECK_PATH = '__DECK_PATH__';
+var PATTERNS = __PATTERNS_DATA__;
+var SLIDE_IMAGES = __SLIDE_IMAGES__;
+var SLIDE_TITLES = __SLIDE_TITLES__;
+var STORAGE_KEY = 'slide-review-' + DECK_NAME;
+
+var currentSlide = 0;
+var totalSlides = SLIDE_IMAGES.length;
+var commentsList = [];
+
+/* ===== Init ===== */
+(function init() {
+  loadComments();
+  renderCommentList();
+
+  document.querySelectorAll('.action-btn[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() { insertAction(this.dataset.action); });
+  });
+  document.getElementById('btnLayoutModal').addEventListener('click', openLayoutModal);
+
+  goToSlide(0);
+})();
+
+function loadComments() {
+  try { var s = localStorage.getItem(STORAGE_KEY); if (s) commentsList = JSON.parse(s); }
+  catch(e) { commentsList = []; }
+}
+function saveToStorage() { localStorage.setItem(STORAGE_KEY, JSON.stringify(commentsList)); }
+
+/* ===== Navigation ===== */
+function goToSlide(n) {
+  if (n < 0 || n >= totalSlides) return;
+  currentSlide = n;
+  document.getElementById('slideCounter').textContent = (n + 1) + ' / ' + totalSlides;
+  var title = SLIDE_TITLES[n] || '';
+  document.getElementById('slideInfo').textContent = 'スライド ' + (n + 1) + (title ? ': ' + title : '');
+  document.getElementById('slideImage').src = SLIDE_IMAGES[n];
+  renderCommentList();
+}
+function nextSlide() { goToSlide(currentSlide + 1); }
+function prevSlide() { goToSlide(currentSlide - 1); }
+
+/* ===== Comments ===== */
+function addComment() {
+  var box = document.getElementById('commentBox');
+  var text = box.value.trim();
+  if (!text) return;
+  commentsList.push({ slide: currentSlide + 1, title: SLIDE_TITLES[currentSlide] || '', text: text });
+  saveToStorage();
+  box.value = '';
+  renderCommentList();
+  showToast('コメントを追加しました');
+}
+
+function deleteComment(idx) {
+  commentsList.splice(idx, 1);
+  saveToStorage();
+  renderCommentList();
+}
+
+function deleteAll() {
+  if (!commentsList.length || !confirm('全てのコメントを削除しますか？')) return;
+  commentsList = [];
+  saveToStorage();
+  renderCommentList();
+  showToast('全コメントを削除しました');
+}
+
+function insertAction(text) {
+  var box = document.getElementById('commentBox');
+  if (box.value && !box.value.endsWith('\n')) box.value += '\n';
+  box.value += text;
+  box.focus();
+}
+
+function renderCommentList() {
+  var container = document.getElementById('commentList');
+  container.innerHTML = '';
+  document.getElementById('commentCount').textContent = commentsList.length;
+
+  commentsList.forEach(function(c, i) {
+    var div = document.createElement('div');
+    div.className = 'comment-item' + (c.slide === currentSlide + 1 ? ' active' : '');
+    var titleShort = c.title ? c.title.substring(0, 16) + (c.title.length > 16 ? '...' : '') : '';
+    div.innerHTML =
+      '<div class="comment-item-header">' +
+        '<div><span class="comment-slide-label">スライド ' + c.slide + '</span>' +
+        '<span class="comment-slide-title">' + esc(titleShort) + '</span></div>' +
+        '<button class="comment-delete" data-idx="' + i + '">&times;</button>' +
+      '</div>' +
+      '<div class="comment-text">' + esc(c.text) + '</div>';
+    div.addEventListener('click', function(e) {
+      if (e.target.classList.contains('comment-delete')) { e.stopPropagation(); deleteComment(i); return; }
+      goToSlide(c.slide - 1);
+    });
+    container.appendChild(div);
+  });
+}
+
+/* ===== Header actions ===== */
+function openInNewTab() { window.open(DECK_PATH, '_blank'); }
+function toggleFullscreen() {
+  var el = document.getElementById('previewWrapper');
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('hidden');
+  document.getElementById('btnToggleSidebar').classList.toggle('active');
+}
+
+/* ===== JSON export ===== */
+function buildJSON() {
+  return {
+    deck: DECK_PATH,
+    timestamp: new Date().toISOString(),
+    total_slides: totalSlides,
+    reviews: commentsList.map(function(c) { return { slide: c.slide, comment: c.text }; })
+  };
+}
+function copyJSON() {
+  var json = JSON.stringify(buildJSON(), null, 2);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(function() { showToast('JSON をクリップボードにコピーしました'); });
+  } else {
+    var ta = document.createElement('textarea'); ta.value = json;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('JSON をクリップボードにコピーしました');
+  }
+}
+
+/* ===== Layout modal ===== */
+function openLayoutModal() {
+  document.getElementById('layoutModal').classList.add('active');
+  if (!document.getElementById('patternList').hasChildNodes()) renderPatterns();
+}
+function closeLayoutModal() { document.getElementById('layoutModal').classList.remove('active'); }
+
+function renderPatterns() {
+  var container = document.getElementById('patternList');
+  var cats = {};
+  PATTERNS.forEach(function(p) { (cats[p.category] = cats[p.category] || []).push(p); });
+  Object.keys(cats).forEach(function(cat) {
+    var h = document.createElement('div');
+    h.className = 'modal-category';
+    h.textContent = cat;
+    container.appendChild(h);
+    var grid = document.createElement('div');
+    grid.className = 'pattern-grid';
+    cats[cat].forEach(function(p) {
+      var card = document.createElement('div');
+      card.className = 'pattern-card';
+      card.innerHTML =
+        (p.thumb ? '<img src="' + p.thumb + '" alt="Pattern ' + p.id + '" loading="lazy">' : '') +
+        '<div class="pattern-card-label"><span class="pattern-num">' + p.id + '.</span>' + esc(p.name) + '</div>';
+      card.addEventListener('click', function() {
+        insertAction('このスライドを「パターン ' + p.id + ': ' + p.name + '」のレイアウトに変更して');
+        closeLayoutModal();
+      });
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  });
+}
+
+document.getElementById('layoutModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLayoutModal();
+});
+
+/* ===== Utils ===== */
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function showToast(msg) {
+  var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2000);
+}
+
+/* ===== Keyboard ===== */
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') { prevSlide(); e.preventDefault(); }
+  if (e.key === 'ArrowRight') { nextSlide(); e.preventDefault(); }
+  if (e.key === 'Escape') closeLayoutModal();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide Review</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+    background: #f5f5f5; color: #333; min-height: 100vh;
+  }
+  .header {
+    padding: 0 24px; height: 48px; background: #1B4565; color: #fff;
+    display: flex; align-items: center;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .container { max-width: 720px; margin: 40px auto; padding: 0 24px; }
+  .subtitle { font-size: 14px; color: #888; margin-bottom: 24px; }
+  .dir-group { margin-bottom: 20px; }
+  .dir-label { font-size: 12px; color: #999; margin-bottom: 6px; font-family: monospace; }
+  .file-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: #fff; border: 1px solid #ddd;
+    border-radius: 6px; cursor: pointer; margin-bottom: 6px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .file-item:hover { border-color: #3E9BA4; box-shadow: 0 2px 8px rgba(62,155,164,0.15); }
+  .file-item.loading { opacity: 0.6; pointer-events: none; }
+  .file-icon { font-size: 18px; flex-shrink: 0; }
+  .file-name { font-size: 14px; font-weight: 500; }
+  .file-status { font-size: 12px; color: #3E9BA4; margin-top: 2px; display: none; }
+  .loading .file-status { display: block; }
+  .spinner {
+    display: none; width: 16px; height: 16px; border: 2px solid #ddd;
+    border-top-color: #3E9BA4; border-radius: 50%;
+    animation: spin 0.6s linear infinite; margin-left: auto; flex-shrink: 0;
+  }
+  .loading .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty { color: #999; font-size: 14px; text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+<div class="header"><h1>Slide Review</h1></div>
+<div class="container">
+  <div class="subtitle">レビューするデッキを選択</div>
+  <div id="fileList"><div class="empty">読み込み中...</div></div>
+</div>
+<script>
+fetch('/api/files')
+  .then(function(r) { return r.json(); })
+  .then(function(files) {
+    var container = document.getElementById('fileList');
+    if (!files.length) {
+      container.innerHTML = '<div class="empty">HTML ファイルが見つかりません</div>';
+      return;
+    }
+    var groups = {};
+    files.forEach(function(f) { (groups[f.dir] = groups[f.dir] || []).push(f); });
+    container.innerHTML = '';
+    Object.keys(groups).sort().forEach(function(dir) {
+      var g = document.createElement('div');
+      g.className = 'dir-group';
+      g.innerHTML = '<div class="dir-label">' + esc(dir || '.') + '/</div>';
+      groups[dir].forEach(function(f) {
+        var item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML =
+          '<span class="file-icon">📄</span>' +
+          '<div><div class="file-name">' + esc(f.name) + '</div>' +
+          '<div class="file-status">レビューを生成中...</div></div>' +
+          '<div class="spinner"></div>';
+        item.addEventListener('click', function() { selectFile(f.path, item); });
+        g.appendChild(item);
+      });
+      container.appendChild(g);
+    });
+  });
+
+function selectFile(filePath, el) {
+  if (el.classList.contains('loading')) return;
+  el.classList.add('loading');
+  fetch('/api/generate?file=' + encodeURIComponent(filePath))
+    .then(function(r) {
+      if (!r.ok) throw new Error('生成に失敗しました');
+      return r.json();
+    })
+    .then(function(data) { window.location.href = data.url; })
+    .catch(function(err) {
+      el.classList.remove('loading');
+      alert(err.message);
+    });
+}
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+</script>
+</body>
+</html>
