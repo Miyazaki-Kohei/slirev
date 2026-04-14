@@ -7,13 +7,13 @@ Marp デッキ HTML をスライドごとにプレビューしながらコメン
 ### npx (インストール不要)
 
 ```bash
-npx slirev
+npx @miyakoh/slirev
 ```
 
 ### グローバルインストール
 
 ```bash
-npm install -g slirev
+npm install -g @miyakoh/slirev
 ```
 
 ### Claude Code Skill
@@ -44,7 +44,7 @@ npx playwright install chromium
 引数なしで起動すると、カレントディレクトリ以下の Marp デッキ HTML を一覧表示します。
 
 ```bash
-npx slirev
+npx @miyakoh/slirev
 ```
 
 ブラウザが開き、ファイル一覧が表示されます。クリックするとレビュー画面が生成されます。
@@ -54,7 +54,7 @@ npx slirev
 特定のデッキファイルを直接指定してレビューを開始します。
 
 ```bash
-npx slirev output/my-deck/deck.html
+npx @miyakoh/slirev output/my-deck/deck.html
 ```
 
 ### オプション
@@ -64,8 +64,8 @@ npx slirev output/my-deck/deck.html
 | `--no-browser` | ブラウザの自動起動を抑制 |
 
 ```bash
-npx slirev --no-browser                    # URLのみ表示
-npx slirev output/deck.html --no-browser   # 直接指定 + ブラウザ抑制
+npx @miyakoh/slirev --no-browser                    # URLのみ表示
+npx @miyakoh/slirev output/deck.html --no-browser   # 直接指定 + ブラウザ抑制
 ```
 
 サーバーは `Ctrl+C` で停止します。
@@ -88,7 +88,7 @@ npx slirev output/deck.html --no-browser   # 直接指定 + ブラウザ抑制
 ```bash
 # 1. Marp デッキのあるディレクトリで起動
 cd my-presentation
-npx slirev
+npx @miyakoh/slirev
 
 # 2. ブラウザでファイルを選択 → レビュー画面が開く
 # 3. 各スライドにコメントを記入
@@ -98,13 +98,13 @@ npx slirev
 ### 特定ファイルを直接レビュー
 
 ```bash
-npx slirev dist/my-presentation.html
+npx @miyakoh/slirev dist/my-presentation.html
 ```
 
 ### CI / リモート環境
 
 ```bash
-npx slirev --no-browser
+npx @miyakoh/slirev --no-browser
 # 表示された URL にブラウザでアクセス
 ```
 
