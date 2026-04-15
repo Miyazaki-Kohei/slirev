@@ -1,6 +1,7 @@
 src/
 tsconfig.json
 sample-html/
+svg/
 .claude/
 .github/
 *.tsbuildinfo

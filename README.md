@@ -37,6 +37,8 @@ Playwright の Chromium が必要です（初回のみ）:
 npx playwright install chromium
 ```
 
+Chromium が未インストールの場合、起動時にエラーメッセージで案内されます。
+
 ## Usage
 
 ### ファイル選択モード
@@ -68,17 +70,19 @@ npx @miyakoh/slirev --no-browser                    # URLのみ表示
 npx @miyakoh/slirev output/deck.html --no-browser   # 直接指定 + ブラウザ抑制
 ```
 
-サーバーは `Ctrl+C` で停止します。
+サーバーはレビュー画面の「終了」ボタン、または `Ctrl+C` で停止できます。
 
 ## Features
 
 - **ファイル選択 UI**: CWD 以下のデッキ HTML を一覧表示、クリックでレビュー開始
 - **スライドプレビュー**: Playwright でスライドを画像キャプチャし表示（標準モード・Bespoke モード両対応）
+- **ファイル切り替え**: レビュー画面のヘッダーからプルダウンで他のデッキに切り替え可能
 - **ナビゲーション**: `←` `→` キーまたはボタンでスライド切り替え
 - **コメント機能**: スライドごとにコメントを追加・削除、localStorage に自動保存
 - **クイックアクション**: スキル呼び出しテキストをワンクリックで挿入
 - **レイアウト選択モーダル**: 39 種のスライドレイアウトパターンをサムネイル付きで一覧表示
-- **JSON エクスポート**: 全コメントを JSON 形式でクリップボードにコピー
+- **JSON エクスポート**: 全コメントを `@相対パス` 形式のデッキパス付き JSON でクリップボードにコピー
+- **サーバー終了**: ブラウザ上の「終了」ボタンからサーバーを停止可能
 - **メモリ上で動作**: レビュー HTML はメモリ上で生成・配信、ファイルを一切書き出さない
 
 ## Workflow
@@ -93,6 +97,7 @@ npx @miyakoh/slirev
 # 2. ブラウザでファイルを選択 → レビュー画面が開く
 # 3. 各スライドにコメントを記入
 # 4. JSON エクスポートでコメントをコピー
+# 5. 「終了」ボタンでサーバー停止
 ```
 
 ### 特定ファイルを直接レビュー
@@ -114,14 +119,14 @@ npx @miyakoh/slirev --no-browser
 slirev/
 ├── src/
 │   └── index.ts              # CLI エントリポイント（TypeScript）
-├── dist/
-│   └── index.js              # ビルド済み JS
 ├── templates/
 │   ├── picker.html           # ファイル選択 UI
 │   └── review-template.html  # レビュー UI テンプレート
 ├── pattern-thumbnails/       # レイアウトパターンのサムネイル画像
 ├── skills/
 │   └── slirev/SKILL.md       # Claude Code Skill 定義
+├── svg/
+│   └── slirev-icon.svg       # アイコン（favicon）
 ├── sample-html/              # テスト用サンプル
 ├── package.json
 ├── tsconfig.json
