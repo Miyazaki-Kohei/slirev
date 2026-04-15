@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slide Feedback - __DECK_NAME__</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPHRpdGxlPlNsaXJldjwvdGl0bGU+CiAgPGRlc2M+44K544Op44Kk44OJ44Os44OT44Ol44O844K144O844OT44K544Gu44Ki44Kk44Kz44OzPC9kZXNjPgogIDwhLS0gTmF2eSByb3VuZGVkIGJhY2tncm91bmQgLS0+CiAgPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjAiIGZpbGw9IiMxQjQ1NjUiLz4KICA8IS0tIEJhY2sgc2xpZGUgKGRlcHRoKSAtLT4KICA8cmVjdCB4PSIxOCIgeT0iMTgiIHdpZHRoPSI0NiIgaGVpZ2h0PSIzMiIgcng9IjQiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9IjAuMjUiLz4KICA8IS0tIEZyb250IHNsaWRlIC0tPgogIDxyZWN0IHg9IjEyIiB5PSIxNCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iI0ZGRkZGRiIvPgogIDwhLS0gU2xpZGUgY29udGVudCBsaW5lcyAtLT4KICA8cmVjdCB4PSIxOCIgeT0iMjIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjMkE1RjhGIiBvcGFjaXR5PSIwLjU1Ii8+CiAgPHJlY3QgeD0iMTgiIHk9IjI4IiB3aWR0aD0iMjAiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMyQTVGOEYiIG9wYWNpdHk9IjAuMjUiLz4KICA8cmVjdCB4PSIxOCIgeT0iMzMiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyIiByeD0iMSIgZmlsbD0iIzJBNUY4RiIgb3BhY2l0eT0iMC4yNSIvPgogIDxyZWN0IHg9IjE4IiB5PSIzOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSIjMkE1RjhGIiBvcGFjaXR5PSIwLjI1Ii8+CiAgPCEtLSBDb21tZW50IGJ1YmJsZSAodGVhbCkgLS0+CiAgPHJlY3QgeD0iNDIiIHk9IjQ0IiB3aWR0aD0iNDIiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSIjM0U5QkE0Ii8+CiAgPHBhdGggZD0iTTUyIDcyIEw0OCA4MCBMNTggNzIgWiIgZmlsbD0iIzNFOUJBNCIvPgogIDwhLS0gQ2hlY2ttYXJrIC0tPgogIDxwb2x5bGluZSBwb2ludHM9IjUyLDU2IDYwLDY0IDc0LDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==">
+<title>Slirev - __DECK_NAME__</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -18,9 +19,13 @@
   }
   .header-left { display: flex; align-items: center; gap: 16px; }
   .header-title { font-size: 15px; font-weight: 600; white-space: nowrap; }
-  .deck-badge {
+  .deck-select {
     background: #3E9BA4; color: #fff; padding: 4px 14px; border-radius: 4px; font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.3); cursor: pointer; appearance: auto;
+    max-width: 240px;
   }
+  .deck-select:hover { background: #358a92; }
+  .deck-select option { background: #fff; color: #333; }
   .header-center { display: flex; align-items: center; gap: 8px; }
   .nav-btn {
     background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff;
@@ -36,6 +41,8 @@
   }
   .header-action:hover { background: rgba(255,255,255,0.15); }
   .header-action.active { background: #3E9BA4; border-color: #3E9BA4; }
+  .header-action.danger { border-color: rgba(231,76,60,0.5); color: #fbb; }
+  .header-action.danger:hover { background: rgba(231,76,60,0.3); }
 
   /* ===== Main layout ===== */
   .main { display: flex; height: calc(100vh - 48px); }
@@ -167,14 +174,31 @@
     font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
   }
   .toast.show { opacity: 1; }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 300; align-items: center; justify-content: center;
+  }
+  .loading-overlay.active { display: flex; }
+  .loading-box {
+    background: #fff; border-radius: 12px; padding: 32px 48px;
+    text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .loading-spinner {
+    width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #3E9BA4;
+    border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: #555; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-left">
-    <span class="header-title">Slide Feedback</span>
-    <span class="deck-badge">__DECK_NAME__</span>
+    <span class="header-title">Slirev</span>
+    <select class="deck-select" id="deckSelect"></select>
   </div>
   <div class="header-center">
     <button class="nav-btn" id="btnPrev" onclick="prevSlide()">&larr;</button>
@@ -185,6 +209,7 @@
     <button class="header-action" id="btnNewTab" onclick="openInNewTab()">新しいタブで開く</button>
     <button class="header-action" id="btnFullscreen" onclick="toggleFullscreen()">フルスクリーン</button>
     <button class="header-action active" id="btnToggleSidebar" onclick="toggleSidebar()">コメント</button>
+    <button class="header-action danger" id="btnShutdown" onclick="shutdownServer()">終了</button>
   </div>
 </div>
 
@@ -241,6 +266,13 @@
   </div>
 </div>
 
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">レビューを生成中...</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -265,8 +297,52 @@ var commentsList = [];
   });
   document.getElementById('btnLayoutModal').addEventListener('click', openLayoutModal);
 
+  initDeckSelect();
   goToSlide(0);
 })();
+
+/* ===== Deck selector ===== */
+function initDeckSelect() {
+  var select = document.getElementById('deckSelect');
+  fetch('/api/files')
+    .then(function(r) { return r.json(); })
+    .then(function(files) {
+      files.forEach(function(f) {
+        var opt = document.createElement('option');
+        opt.value = f.path;
+        opt.textContent = f.dir ? f.dir + '/' + f.name : f.name;
+        if (f.name === DECK_PATH || f.path.endsWith('/' + DECK_PATH)) opt.selected = true;
+        select.appendChild(opt);
+      });
+    })
+    .catch(function() {
+      var opt = document.createElement('option');
+      opt.textContent = DECK_NAME;
+      select.appendChild(opt);
+    });
+  select.addEventListener('change', function() {
+    var filePath = this.value;
+    if (!filePath) return;
+    showLoading('レビューを生成中...');
+    fetch('/api/generate?file=' + encodeURIComponent(filePath))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) window.location.href = data.url;
+        else { hideLoading(); showToast('エラー: ' + (data.error || '不明')); }
+      })
+      .catch(function(e) { hideLoading(); showToast('エラー: ' + e.message); });
+  });
+}
+
+/* ===== Shutdown ===== */
+function shutdownServer() {
+  if (!confirm('レビューを終了しますか？')) return;
+  fetch('/api/shutdown')
+    .then(function() {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666;"><div style="text-align:center"><h2>Slirev</h2><p>サーバーを停止しました。このタブを閉じてください。</p></div></div>';
+    })
+    .catch(function() {});
+}
 
 function loadComments() {
   try { var s = localStorage.getItem(STORAGE_KEY); if (s) commentsList = JSON.parse(s); }
@@ -364,8 +440,7 @@ function toggleSidebar() {
 /* ===== JSON export ===== */
 function buildJSON() {
   return {
-    deck: DECK_PATH,
-    timestamp: new Date().toISOString(),
+    deck: '@' + DECK_PATH,
     total_slides: totalSlides,
     reviews: commentsList.map(function(c) { return { slide: c.slide, comment: c.text }; })
   };
@@ -406,7 +481,7 @@ function renderPatterns() {
         (p.thumb ? '<img src="' + p.thumb + '" alt="Pattern ' + p.id + '" loading="lazy">' : '') +
         '<div class="pattern-card-label"><span class="pattern-num">' + p.id + '.</span>' + esc(p.name) + '</div>';
       card.addEventListener('click', function() {
-        insertAction('このスライドを「パターン ' + p.id + ': ' + p.name + '」のレイアウトに変更して');
+        insertAction('/slide-style-MIYAKOH このスライドを「パターン ' + p.id + ': ' + p.name + '」のレイアウトに変更して');
         closeLayoutModal();
       });
       grid.appendChild(card);
@@ -424,6 +499,13 @@ function esc(s) { var d = document.createElement('div'); d.textContent = s; retu
 function showToast(msg) {
   var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
   setTimeout(function() { el.classList.remove('show'); }, 2000);
+}
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || 'レビューを生成中...';
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
 }
 
 /* ===== Keyboard ===== */

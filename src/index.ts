@@ -201,6 +201,15 @@ function createAppServer(rootDir: string, listenPort = 0): Promise<{ server: htt
         return;
       }
 
+      // API: shutdown server
+      if (url.pathname === "/api/shutdown") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+        console.log("\nServer stopped.");
+        setTimeout(() => process.exit(0), 100);
+        return;
+      }
+
       // Serve generated review pages from memory
       if (url.pathname.startsWith("/review/") && reviewCache.has(url.pathname)) {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -341,7 +350,7 @@ async function generate(deckPath: string) {
   let html = fs.readFileSync(templatePath, "utf-8");
 
   html = html.replaceAll("__DECK_NAME__", deckName);
-  html = html.replaceAll("__DECK_PATH__", path.basename(deckPath));
+  html = html.replaceAll("__DECK_PATH__", path.relative(process.cwd(), deckPath));
   html = html.replace("__PATTERNS_DATA__", JSON.stringify(patterns));
   html = html.replace("__SLIDE_IMAGES__", JSON.stringify(slideImages));
   html = html.replace("__SLIDE_TITLES__", JSON.stringify(titles));
@@ -360,9 +369,22 @@ function openBrowser(url: string) {
   exec(`${cmd} "${url}"`);
 }
 
+async function checkChromium() {
+  try {
+    const browser = await chromium.launch({ headless: true });
+    await browser.close();
+  } catch {
+    console.error("\nError: Chromium が見つかりません。以下のコマンドでインストールしてください:\n");
+    console.error("  npx playwright install chromium\n");
+    process.exit(1);
+  }
+}
+
 async function main() {
   const noBrowser = process.argv.includes("--no-browser");
   const args = process.argv.slice(2).filter((a) => a !== "--no-browser");
+
+  await checkChromium();
 
   const shutdown = (server: http.Server) => {
     process.on("SIGINT", () => { server.close(); console.log("\nServer stopped."); process.exit(0); });
@@ -381,33 +403,26 @@ async function main() {
     return;
   }
 
-  // Direct mode: generate review for a specific deck
+  // Direct mode: generate review for a specific deck, then use app server
   const deckPath = path.resolve(args[0]);
   if (!fs.existsSync(deckPath)) {
     console.log(`Error: ${deckPath} not found`);
     process.exit(1);
   }
 
-  const { html, deckDir, reviewFilename } = await generate(deckPath);
+  const rootDir = process.cwd();
+  const { server, port } = await createAppServer(rootDir);
 
-  // Serve review HTML from memory, static assets from deck directory
-  const reviewUrl = `/${reviewFilename}`;
-  const { server, port } = await serve(deckDir);
+  // Generate via the app server's API to populate its cache
+  const generateUrl = `http://127.0.0.1:${port}/api/generate?file=${encodeURIComponent(deckPath)}`;
+  const genRes = await fetch(generateUrl);
+  const genData = await genRes.json() as { url?: string; error?: string };
+  if (!genData.url) {
+    console.error(`Error: ${genData.error || "generation failed"}`);
+    process.exit(1);
+  }
 
-  // Wrap the existing server to intercept the review URL
-  const origListeners = server.listeners("request") as Function[];
-  server.removeAllListeners("request");
-  server.on("request", (req: http.IncomingMessage, res: http.ServerResponse) => {
-    const url = new URL(req.url || "/", "http://localhost");
-    if (url.pathname === reviewUrl) {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      res.end(html);
-      return;
-    }
-    for (const listener of origListeners) listener(req, res);
-  });
-
-  const fullUrl = `http://127.0.0.1:${port}${reviewUrl}`;
+  const fullUrl = `http://127.0.0.1:${port}${genData.url}`;
   console.log(`Review page: ${fullUrl}`);
 
   if (!noBrowser) {

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slide Review</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPHRpdGxlPlNsaXJldjwvdGl0bGU+CiAgPGRlc2M+44K544Op44Kk44OJ44Os44OT44Ol44O844K144O844OT44K544Gu44Ki44Kk44Kz44OzPC9kZXNjPgogIDwhLS0gTmF2eSByb3VuZGVkIGJhY2tncm91bmQgLS0+CiAgPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjAiIGZpbGw9IiMxQjQ1NjUiLz4KICA8IS0tIEJhY2sgc2xpZGUgKGRlcHRoKSAtLT4KICA8cmVjdCB4PSIxOCIgeT0iMTgiIHdpZHRoPSI0NiIgaGVpZ2h0PSIzMiIgcng9IjQiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9IjAuMjUiLz4KICA8IS0tIEZyb250IHNsaWRlIC0tPgogIDxyZWN0IHg9IjEyIiB5PSIxNCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iI0ZGRkZGRiIvPgogIDwhLS0gU2xpZGUgY29udGVudCBsaW5lcyAtLT4KICA8cmVjdCB4PSIxOCIgeT0iMjIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjMkE1RjhGIiBvcGFjaXR5PSIwLjU1Ii8+CiAgPHJlY3QgeD0iMTgiIHk9IjI4IiB3aWR0aD0iMjAiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMyQTVGOEYiIG9wYWNpdHk9IjAuMjUiLz4KICA8cmVjdCB4PSIxOCIgeT0iMzMiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyIiByeD0iMSIgZmlsbD0iIzJBNUY4RiIgb3BhY2l0eT0iMC4yNSIvPgogIDxyZWN0IHg9IjE4IiB5PSIzOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSIjMkE1RjhGIiBvcGFjaXR5PSIwLjI1Ii8+CiAgPCEtLSBDb21tZW50IGJ1YmJsZSAodGVhbCkgLS0+CiAgPHJlY3QgeD0iNDIiIHk9IjQ0IiB3aWR0aD0iNDIiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSIjM0U5QkE0Ii8+CiAgPHBhdGggZD0iTTUyIDcyIEw0OCA4MCBMNTggNzIgWiIgZmlsbD0iIzNFOUJBNCIvPgogIDwhLS0gQ2hlY2ttYXJrIC0tPgogIDxwb2x5bGluZSBwb2ludHM9IjUyLDU2IDYwLDY0IDc0LDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==">
+<title>Slirev</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -39,13 +40,34 @@
   .loading .spinner { display: block; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .empty { color: #999; font-size: 14px; text-align: center; padding: 40px; }
+  .loading-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 300; align-items: center; justify-content: center;
+  }
+  .loading-overlay.active { display: flex; }
+  .loading-box {
+    background: #fff; border-radius: 12px; padding: 32px 48px;
+    text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .loading-spinner {
+    width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #3E9BA4;
+    border-radius: 50%; animation: loading-spin 0.6s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes loading-spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: #555; }
 </style>
 </head>
 <body>
-<div class="header"><h1>Slide Review</h1></div>
+<div class="header"><h1>Slirev</h1></div>
 <div class="container">
   <div class="subtitle">レビューするデッキを選択</div>
   <div id="fileList"><div class="empty">読み込み中...</div></div>
+</div>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">レビューを生成中...</div>
+  </div>
 </div>
 <script>
 fetch('/api/files')
@@ -81,6 +103,7 @@ fetch('/api/files')
 function selectFile(filePath, el) {
   if (el.classList.contains('loading')) return;
   el.classList.add('loading');
+  document.getElementById('loadingOverlay').classList.add('active');
   fetch('/api/generate?file=' + encodeURIComponent(filePath))
     .then(function(r) {
       if (!r.ok) throw new Error('生成に失敗しました');
@@ -89,6 +112,7 @@ function selectFile(filePath, el) {
     .then(function(data) { window.location.href = data.url; })
     .catch(function(err) {
       el.classList.remove('loading');
+      document.getElementById('loadingOverlay').classList.remove('active');
       alert(err.message);
     });
 }
