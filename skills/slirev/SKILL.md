@@ -1,79 +1,83 @@
-# slirev - Marp Slide Review Tool
+---
+name: slirev
+description: Marp スライドのレビュー・フィードバックツール。Marp デッキ HTML をスライドごとにプレビューしながらコメントを残せる Web UI を起動する。ユーザーがスライドレビュー、プレゼン確認、Marp デッキのフィードバック、スライドへのコメント追加、プレゼンテーションのチェックについて言及した場合にこのスキルを使うこと。「スライドを確認したい」「プレゼンにコメントしたい」「デッキをレビューして」といった要望にも対応する。
+---
 
-> **Note:** Run with `npx @miyakoh/slirev` if not installed globally.
+# slirev - Marp スライドレビューツール
 
-## Quick Reference
+Marp デッキ HTML をスライドごとにプレビューしながらコメントを残せる Web UI ツール。  
+グローバル未インストールの場合は `npx @miyakoh/slirev` で実行できる。
+
+## クイックリファレンス
 
 ```bash
-npx @miyakoh/slirev                              # File picker mode (browse decks in CWD)
-npx @miyakoh/slirev <path/to/deck.html>          # Direct review mode
-npx @miyakoh/slirev --no-browser                 # Server only, no auto-open
+npx @miyakoh/slirev                              # ファイル選択モード（CWD以下のデッキを一覧表示）
+npx @miyakoh/slirev <path/to/deck.html>          # 直接指定モード
+npx @miyakoh/slirev --no-browser                 # ブラウザ自動起動を抑制
 ```
 
-## Installation
+## インストール
 
 ```bash
-# First time setup: install Chromium for Playwright
+# 初回のみ: Playwright 用の Chromium をインストール
 npx playwright install chromium
 ```
 
-## File Picker Mode
+## ファイル選択モード
 
-Launch without arguments to browse and select Marp deck HTML files in the current directory.
+引数なしで起動すると、カレントディレクトリ以下の Marp デッキ HTML を一覧表示する。
 
 ```bash
 npx @miyakoh/slirev
 ```
 
-- Recursively searches CWD for `.html` files (up to 4 levels deep)
-- Excludes: `node_modules`, `.git`, `dist`, `*-review.html`, `*-nav.html`
-- Click a file to generate the review page
+- CWD から最大4階層まで `.html` ファイルを再帰検索
+- `node_modules`, `.git`, `dist`, `*-review.html`, `*-nav.html` は除外
+- ファイルをクリックするとレビューページを生成
 
-## Direct Review Mode
+## 直接指定モード
 
-Specify a deck file path to jump straight into review.
+デッキファイルのパスを指定して直接レビューを開始する。
 
 ```bash
 npx @miyakoh/slirev output/my-deck/deck.html
 npx @miyakoh/slirev dist/presentation.html
 ```
 
-## Review UI Features
+## レビュー UI の機能
 
-The review page provides:
+| 機能 | 説明 |
+|------|------|
+| スライドプレビュー | 各スライドのスクリーンショットを表示 |
+| ナビゲーション | `←` `→` キーまたはボタンでスライド切替 |
+| コメント | スライドごとにコメントを追加・削除、localStorage に自動保存 |
+| クイックアクション | スキル呼び出しテキストをワンクリックで挿入 |
+| レイアウト選択 | 39種のスライドレイアウトパターンをサムネイル付きで表示 |
+| JSON エクスポート | 全コメントを JSON 形式でクリップボードにコピー |
 
-| Feature | Description |
-|---------|-------------|
-| Slide preview | Screenshot-based preview of each slide |
-| Navigation | `←` `→` keys or buttons to switch slides |
-| Comments | Add/delete comments per slide, auto-saved to localStorage |
-| Quick actions | One-click insert of skill invocation text |
-| Layout selector | 39 slide layout patterns with thumbnails |
-| JSON export | Copy all comments as JSON to clipboard |
+## よくあるワークフロー
 
-## Common Workflows
-
-### Review a presentation
+### プレゼンテーションをレビューする
 
 ```bash
 cd my-presentation-project
 npx @miyakoh/slirev
-# Select deck in browser → review slides → export comments as JSON
+# ブラウザでファイルを選択 → スライドをレビュー → コメントを JSON エクスポート
 ```
 
-### Review a specific file without opening browser
+### 特定のファイルをブラウザなしでレビューする
 
 ```bash
 npx @miyakoh/slirev dist/deck.html --no-browser
-# Access the printed URL manually
+# 表示された URL に手動でアクセス
 ```
 
-## Supported Formats
+## 対応フォーマット
 
-- Standard Marp HTML (uses `svg[data-marpit-svg]`)
-- Bespoke mode Marp HTML (keyboard navigation based)
+- 標準 Marp HTML（`svg[data-marpit-svg]` ベース）
+- Bespoke モード Marp HTML（キーボードナビゲーションベース）
 
-## Requirements
+## 動作要件
 
 - Node.js >= 18
-- Chromium (installed via `npx playwright install chromium`)
+- Chromium（`npx playwright install chromium` でインストール）
