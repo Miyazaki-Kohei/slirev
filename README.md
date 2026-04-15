@@ -113,6 +113,44 @@ npx @miyakoh/slirev --no-browser
 # 表示された URL にブラウザでアクセス
 ```
 
+## Bundled Skills
+
+slirev には、レビューからスライド修正までをシームレスに行うための Claude Code スキルが同梱されています。
+
+### slide-style-MIYAKOH
+
+既存の Marp スライドを MIYAKOH スタイルガイドに基づいて整形。39 種のレイアウトパターンから最適なものを選択し、Navy (#1B4565) / Teal (#3E9BA4) の統一デザインを適用します。
+
+```
+/slide-style-MIYAKOH このスライドを「パターン 6: 2カラム比較」のレイアウトに変更して
+```
+
+### layout-fix
+
+Marp スライドのレイアウト崩れを Playwright で実際にレンダリングして検出・修正。テキストのはみ出し、余白不足、グリッド崩れなどを自動検出し、反復的に修正します。
+
+### slimg
+
+Google Imagen 4 による画像生成。スライドの画像スロットに配置するビジュアルを生成します。12 種のスタイル（realistic, flat, anime 等）と複数のアスペクト比に対応。
+
+### svg-creator
+
+SVG ダイアグラム・アイコン・図解を直接生成。フローチャート、アーキテクチャ図、概念図などを MIYAKOH スタイルに準拠したベクター画像として作成します。
+
+### スキル連携フロー
+
+```
+Marp スライド原稿
+    ↓
+[slide-style-MIYAKOH]  レイアウトパターン適用 + デザイン統一
+    ↓
+[slimg / svg-creator]  画像・図解の生成
+    ↓
+[layout-fix]           レンダリング検証 + 崩れ修正
+    ↓
+完成したプレゼンテーション
+```
+
 ## File Structure
 
 ```
@@ -123,8 +161,13 @@ slirev/
 │   ├── picker.html           # ファイル選択 UI
 │   └── review-template.html  # レビュー UI テンプレート
 ├── pattern-thumbnails/       # レイアウトパターンのサムネイル画像
+├── .claude/skills/           # 同梱 Claude Code スキル
+│   ├── slide-style-MIYAKOH/  # スタイル適用
+│   ├── layout-fix/           # レイアウト崩れ検出・修正
+│   ├── slimg/                # 画像生成
+│   └── svg-creator/          # SVG 図解生成
 ├── skills/
-│   └── slirev/SKILL.md       # Claude Code Skill 定義
+│   └── slirev/SKILL.md       # slirev Skill 定義
 ├── svg/
 │   └── slirev-icon.svg       # アイコン（favicon）
 ├── sample-html/              # テスト用サンプル
