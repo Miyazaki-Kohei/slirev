@@ -421,7 +421,7 @@ function renderCommentList() {
 }
 
 /* ===== Header actions ===== */
-function openInNewTab() { window.open(DECK_PATH, '_blank'); }
+function openInNewTab() { window.open('/' + DECK_PATH, '_blank'); }
 function toggleFullscreen() {
   var el = document.getElementById('previewWrapper');
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
