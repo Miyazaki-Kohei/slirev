@@ -1,6 +1,6 @@
 {
   "name": "@miyakoh/slirev",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Marp slide review and feedback tool - Web UI for previewing and commenting on Marp presentation decks",
   "type": "module",
   "bin": {
